@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wawa Bakery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#FAF2E4;
+      --card:#FFFDF8;
+      --ink:#2E1B12;
+      --ink-soft:#6B5749;
+      --primary:#4A6B4D;      /* pandan green */
+      --primary-dark:#374F3A;
+      --gold:#C99A2E;         /* stempel / harga */
+      --rose:#C97388;         /* badge */
+      --line:#E4D5BE;
+      --radius:14px;
+      --shadow:0 6px 20px rgba(46,27,18,.08);
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:'Plus Jakarta Sans',sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:1080px;margin:0 auto;padding:0 20px 100px;}
+
+    /* ---------- HERO ---------- */
+    .hero{
+      display:flex;align-items:center;gap:18px;
+      padding:28px 20px 22px;border-bottom:2px dashed var(--line);
+      max-width:1080px;margin:0 auto;
+    }
+    .hero img.logo{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);}
+    .hero .logo-fallback{
+      width:56px;height:56px;border-radius:50%;background:var(--primary);
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      font-family:'Fraunces',serif;font-weight:700;font-size:22px;flex-shrink:0;
+    }
+    .hero h1{
+      font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4vw,34px);
+      margin:0;letter-spacing:-.01em;
+    }
+    .hero p{margin:4px 0 0;color:var(--ink-soft);font-size:14px;}
+    .hero .jam{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+
+    /* ---------- CATEGORY STAMPS ---------- */
+    .kategori-row{display:flex;gap:10px;flex-wrap:wrap;padding:18px 0 6px;}
+    .stamp-chip{
+      font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.03em;
+      border:2px dashed var(--ink-soft);border-radius:999px;
+      padding:7px 16px;background:transparent;cursor:pointer;color:var(--ink-soft);
+      transform:rotate(-1deg);transition:.15s;
+    }
+    .stamp-chip:nth-child(even){transform:rotate(1deg);}
+    .stamp-chip.active{
+      border-style:solid;border-color:var(--primary);color:var(--primary-dark);
+      background:#EAF1E8;font-weight:700;
+    }
+
+    /* ---------- GRID ---------- */
+    .grid{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:18px;margin-top:14px;
+    }
+    .card{
+      background:var(--card);border-radius:var(--radius);overflow:hidden;
+      box-shadow:var(--shadow);display:flex;flex-direction:column;
+    }
+    .card .img-wrap{aspect-ratio:1/1;background:#EFE4CF;overflow:hidden;position:relative;}
+    .card img{width:100%;height:100%;object-fit:cover;display:block;}
+    .card .badge-kat{
+      position:absolute;top:8px;left:8px;background:rgba(46,27,18,.72);color:#fff;
+      font-size:10px;padding:3px 9px;border-radius:999px;font-family:'Space Mono',monospace;
+    }
+    .card .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+    .card h3{font-family:'Fraunces',serif;font-size:17px;margin:0;font-weight:600;line-height:1.25;}
+    .card .desc{font-size:12.5px;color:var(--ink-soft);line-height:1.4;min-height:32px;}
+    .card .harga{font-family:'Space Mono',monospace;color:var(--gold);font-weight:700;font-size:15px;margin-top:auto;}
+    .card .row-add{display:flex;align-items:center;gap:8px;margin-top:6px;}
+    .stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;}
+    .stepper button{
+      background:var(--bg);border:none;width:28px;height:30px;font-size:15px;cursor:pointer;color:var(--ink);
+    }
+    .stepper span{width:26px;text-align:center;font-family:'Space Mono',monospace;font-size:13px;}
+    .btn-add{
+      flex:1;background:var(--primary);color:#fff;border:none;border-radius:8px;
+      padding:8px 10px;font-weight:700;font-size:13px;cursor:pointer;
+    }
+    .btn-add:active{background:var(--primary-dark);}
+    .stok-habis{font-size:11px;color:var(--rose);font-weight:700;}
+
+    /* ---------- FLOATING CART BUTTON ---------- */
+    .fab-cart{
+      position:fixed;right:18px;bottom:18px;background:var(--primary);color:#fff;
+      border:none;border-radius:999px;padding:14px 20px;box-shadow:0 8px 22px rgba(74,107,77,.4);
+      font-weight:700;font-family:'Plus Jakarta Sans';cursor:pointer;display:flex;align-items:center;gap:8px;
+      z-index:40;font-size:14px;
+    }
+    .fab-cart .count{
+      background:var(--gold);color:#2E1B12;border-radius:50%;width:22px;height:22px;
+      display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;
+    }
+
+    /* ---------- CART DRAWER (NOTA STYLE) ---------- */
+    .overlay{position:fixed;inset:0;background:rgba(46,27,18,.45);display:none;z-index:50;}
+    .overlay.show{display:block;}
+    .drawer{
+      position:fixed;top:0;right:0;height:100%;width:min(400px,92vw);
+      background:#FFFDF8;z-index:51;transform:translateX(100%);transition:transform .28s ease;
+      display:flex;flex-direction:column;
+      box-shadow:-8px 0 30px rgba(0,0,0,.15);
+    }
+    .drawer.show{transform:translateX(0);}
+    .nota-top{
+      background:var(--ink);color:#fff;padding:18px 20px;flex-shrink:0;
+      background-image:repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.06) 10px 12px);
+    }
+    .nota-top h2{font-family:'Fraunces',serif;margin:0;font-size:19px;}
+    .nota-top .sub{font-family:'Space Mono',monospace;font-size:11px;opacity:.75;margin-top:2px;}
+    #cartContent{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;}
+    .nota-body{padding:16px 20px;border-bottom:2px dashed var(--line);}
+    .nota-item{
+      display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:9px 0;
+      border-bottom:1px dashed var(--line);font-family:'Space Mono',monospace;
+    }
+    .nota-item .nm{font-family:'Plus Jakarta Sans';font-weight:600;font-size:13.5px;}
+    .nota-item .ctrl{display:flex;align-items:center;gap:6px;margin-top:4px;}
+    .nota-item button{border:1px solid var(--line);background:#fff;border-radius:6px;width:22px;height:22px;cursor:pointer;}
+    .nota-total{display:flex;justify-content:space-between;padding:14px 20px 6px;font-family:'Space Mono',monospace;font-weight:700;font-size:16px;}
+    .kosong{color:var(--ink-soft);font-size:13px;text-align:center;padding:40px 10px;}
+
+    .form-area{padding:12px 20px 20px;}
+    .form-area label{font-size:12px;font-weight:700;color:var(--ink-soft);display:block;margin:10px 0 4px;}
+    .form-area input,.form-area textarea,.form-area select{
+      width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;
+      font-family:'Plus Jakarta Sans';font-size:13.5px;background:#fff;color:var(--ink);
+    }
+    .form-area textarea{resize:vertical;min-height:50px;}
+    .radio-row{display:flex;gap:14px;margin-top:6px;}
+    .radio-row label{display:flex;align-items:center;gap:6px;font-weight:500;color:var(--ink);font-size:13px;margin:0;}
+    .btn-checkout{
+      width:100%;background:var(--primary);color:#fff;border:none;border-radius:10px;
+      padding:13px;font-weight:800;font-size:14.5px;margin-top:16px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn-checkout:disabled{opacity:.6;cursor:progress;}
+    .close-drawer{background:none;border:none;color:#fff;font-size:20px;position:absolute;top:14px;right:16px;cursor:pointer;}
+    .drawer .nota-top{position:relative;}
+
+    /* ---------- SUCCESS STAMP ---------- */
+    .success-screen{padding:40px 24px;text-align:center;flex:1;overflow-y:auto;}
+    .stamp{
+      width:120px;height:120px;border-radius:50%;border:4px solid var(--primary);
+      color:var(--primary);display:flex;align-items:center;justify-content:center;
+      margin:0 auto 18px;transform:rotate(-8deg);font-family:'Space Mono',monospace;
+      font-weight:700;font-size:13px;line-height:1.3;text-transform:uppercase;
+      animation:stampIn .35s cubic-bezier(.2,1.4,.4,1);
+    }
+    @keyframes stampIn{from{transform:scale(2) rotate(-8deg);opacity:0;}to{transform:scale(1) rotate(-8deg);opacity:1;}}
+    .success-screen h3{font-family:'Fraunces',serif;margin:0 0 6px;font-size:20px;}
+    .success-screen .oid{font-family:'Space Mono',monospace;color:var(--gold);font-weight:700;}
+    .success-screen p{color:var(--ink-soft);font-size:13.5px;line-height:1.5;}
+    .btn-tutup{
+      background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 22px;
+      font-weight:700;cursor:pointer;margin-top:14px;
+    }
+
+    /* ---------- STATUS CHECK ---------- */
+    .status-link{
+      text-align:center;margin-top:22px;font-size:12.5px;color:var(--ink-soft);
+    }
+    .status-link a{color:var(--primary-dark);font-weight:700;cursor:pointer;text-decoration:underline;}
+    .status-box{
+      max-width:420px;margin:60px auto;background:var(--card);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:24px;
+    }
+    .status-box h2{font-family:'Fraunces',serif;margin-top:0;}
+    .status-result{
+      margin-top:16px;padding:14px;border:2px dashed var(--line);border-radius:10px;
+      font-size:13px;white-space:pre-wrap;font-family:'Space Mono',monospace;
+    }
+    .hidden{display:none !important;}
+    .load-msg{text-align:center;color:var(--ink-soft);font-size:13px;padding:30px;grid-column:1/-1;}
+
+    @media(max-width:520px){
+      .hero{padding:20px 16px;}
+      .wrap{padding:0 16px 100px;}
+    }
+  </style>
+</head>
+<body>
+
+<div id="mainView">
+  <div class="hero">
+    <div id="logoBox"></div>
+    <div>
+      <h1 id="namaToko">Wawa Bakery</h1>
+      <p id="tagline">Fresh from the oven, dipesan lewat WhatsApp</p>
+      <div class="jam" id="jamOps"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="kategori-row" id="kategoriRow"></div>
+    <div class="grid" id="grid"><div class="load-msg">Memuat produk...</div></div>
+    <div class="status-link">Sudah pernah order? <a onclick="showStatus()">Cek status pesanan</a></div>
+  </div>
+</div>
+
+<div id="statusView" class="hidden">
+  <div class="wrap">
+    <div class="status-box">
+      <h2>Cek Status Pesanan</h2>
+      <label style="font-size:12px;font-weight:700;color:var(--ink-soft);">ID Order</label>
+      <input id="statusOrderId" placeholder="contoh: WB250808-0001" style="width:100%;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;margin-top:4px;font-family:'Space Mono',monospace;">
+      <button class="btn-checkout" onclick="cekStatus()">Cek Status</button>
+      <div id="statusResult" class="status-result hidden"></div>
+      <div class="status-link" style="margin-top:18px;"><a onclick="showMain()">&larr; Kembali ke katalog</a></div>
+    </div>
+  </div>
+</div>
+
+<button class="fab-cart" id="fabCart" onclick="openCart()">
+  🧺 Keranjang <span class="count" id="cartCount">0</span>
+</button>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="drawer" id="drawer">
+  <div class="nota-top">
+    <button class="close-drawer" onclick="closeCart()">&times;</button>
+    <h2>Nota Pesanan</h2>
+    <div class="sub" id="notaTanggal"></div>
+  </div>
+
+  <div id="cartContent">
+    <div class="nota-body" id="notaBody"><div class="kosong">Keranjang masih kosong</div></div>
+    <div class="nota-total"><span>TOTAL</span><span id="notaTotal">Rp0</span></div>
+    <div class="form-area" id="formArea">
+      <label>Nama Pemesan</label>
+      <input id="fNama" placeholder="Nama lengkap">
+      <label>No. WhatsApp</label>
+      <input id="fWa" placeholder="08xxxxxxxxxx">
+      <label>Alamat / Titik Pengambilan</label>
+      <textarea id="fAlamat" placeholder="Alamat lengkap untuk diantar, atau tulis 'Ambil di toko'"></textarea>
+      <label>Metode Pembayaran</label>
+      <div class="radio-row">
+        <label><input type="radio" name="metode" value="COD" checked> COD</label>
+        <label><input type="radio" name="metode" value="Transfer Bank"> Transfer</label>
+      </div>
+      <label>Catatan (opsional)</label>
+      <textarea id="fCatatan" placeholder="Contoh: tanpa kacang, dikirim sore hari, dll"></textarea>
+      <button class="btn-checkout" id="btnCheckout" onclick="checkout()">🛒 Pesan via WhatsApp</button>
+    </div>
+  </div>
+
+  <div id="successScreen" class="success-screen hidden">
+    <div class="stamp">Pesanan<br>Diterima</div>
+    <h3>Terima kasih!</h3>
+    <p>Pesanan kamu sudah masuk dengan ID:</p>
+    <div class="oid" id="successOrderId"></div>
+    <p style="margin-top:10px;">Admin toko akan segera menghubungi kamu di WhatsApp untuk konfirmasi pembayaran & proses selanjutnya.</p>
+    <button class="btn-tutup" onclick="closeCart()">Tutup</button>
+  </div>
+</div>
+
+<script>
+  // ================================================================
+  // ⚠️ WAJIB DIISI: paste Web app URL hasil deploy Apps Script kamu
+  // Contoh: 'https://script.google.com/macros/s/AKfycb.../exec'
+  // ================================================================
+  const WEBAPP_URL = 'PASTE_URL_WEBAPP_GAS_DISINI';
+
+  let PRODUK = [];
+  let TOKO = {};
+  let CART = {};        // {id: qty}
+  let KATEGORI_AKTIF = 'Semua';
+
+  document.addEventListener('DOMContentLoaded', function(){
+    fetch(WEBAPP_URL + '?action=getInitData')
+      .then(r => r.json())
+      .then(initApp)
+      .catch(onErr);
+  });
+
+  function onErr(err){
+    console.error(err);
+    document.getElementById('grid').innerHTML =
+      '<div class="load-msg">Gagal memuat data. Pastikan WEBAPP_URL sudah diisi dengan benar & Apps Script sudah di-deploy.</div>';
+  }
+
+  function initApp(data){
+    TOKO = data.toko || {};
+    PRODUK = data.produk || [];
+    document.getElementById('namaToko').textContent = TOKO.nama_toko || 'Wawa Bakery';
+    document.getElementById('tagline').textContent = TOKO.tagline || '';
+    document.getElementById('jamOps').textContent = TOKO.jam_operasional ? ('Jam buka: ' + TOKO.jam_operasional) : '';
+
+    const logoBox = document.getElementById('logoBox');
+    if (TOKO.logo_url) {
+      logoBox.innerHTML = '<img class="logo" src="' + TOKO.logo_url + '">';
+    } else {
+      logoBox.innerHTML = '<div class="logo-fallback">' + (TOKO.nama_toko||'W').charAt(0) + '</div>';
+    }
+
+    renderKategori();
+    renderGrid();
+  }
+
+  function renderKategori(){
+    const kats = ['Semua'].concat([...new Set(PRODUK.map(p=>p.kategori).filter(Boolean))]);
+    const row = document.getElementById('kategoriRow');
+    row.innerHTML = kats.map(k =>
+      '<button class="stamp-chip ' + (k===KATEGORI_AKTIF?'active':'') + '" onclick="pilihKategori(\'' + k.replace(/'/g,"") + '\')">' + k + '</button>'
+    ).join('');
+  }
+
+  function pilihKategori(k){ KATEGORI_AKTIF = k; renderKategori(); renderGrid(); }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid');
+    const list = PRODUK.filter(p => KATEGORI_AKTIF==='Semua' || p.kategori===KATEGORI_AKTIF);
+    if (!list.length){ grid.innerHTML = '<div class="load-msg">Belum ada produk di kategori ini.</div>'; return; }
+    grid.innerHTML = list.map(p => {
+      const qty = CART[p.id] || 0;
+      const habis = p.stok <= 0;
+      return '<div class="card">' +
+        '<div class="img-wrap"><span class="badge-kat">' + (p.kategori||'') + '</span>' +
+        (p.foto ? '<img src="'+p.foto+'" loading="lazy">' : '') + '</div>' +
+        '<div class="body">' +
+          '<h3>' + p.nama + '</h3>' +
+          '<div class="desc">' + (p.deskripsi||'') + '</div>' +
+          '<div class="harga">Rp' + fmt(p.harga) + '</div>' +
+          (habis ? '<div class="stok-habis">Stok habis</div>' :
+          '<div class="row-add">' +
+            '<div class="stepper">' +
+              '<button onclick="ubahQty(\''+p.id+'\',-1)">-</button>' +
+              '<span id="qty-'+p.id+'">'+qty+'</span>' +
+              '<button onclick="ubahQty(\''+p.id+'\',1)">+</button>' +
+            '</div>' +
+            '<button class="btn-add" onclick="tambahLangsung(\''+p.id+'\')">Tambah</button>' +
+          '</div>') +
+        '</div></div>';
+    }).join('');
+  }
+
+  function ubahQty(id, delta){
+    const cur = CART[id] || 0;
+    const next = Math.max(0, cur + delta);
+    if (next===0) delete CART[id]; else CART[id]=next;
+    const span = document.getElementById('qty-'+id);
+    if (span) span.textContent = CART[id]||0;
+    updateCartCount();
+  }
+  function tambahLangsung(id){
+    if (!CART[id]) { CART[id] = 1; const span=document.getElementById('qty-'+id); if(span) span.textContent=1; }
+    updateCartCount();
+    renderNota();
+  }
+
+  function updateCartCount(){
+    const total = Object.values(CART).reduce((a,b)=>a+b,0);
+    document.getElementById('cartCount').textContent = total;
+  }
+
+  function findProduk(id){ return PRODUK.find(p=>p.id===id); }
+
+  function renderNota(){
+    const ids = Object.keys(CART);
+    const body = document.getElementById('notaBody');
+    if (!ids.length){ body.innerHTML = '<div class="kosong">Keranjang masih kosong</div>'; document.getElementById('notaTotal').textContent='Rp0'; return; }
+    let total = 0;
+    body.innerHTML = ids.map(id=>{
+      const p = findProduk(id); if(!p) return '';
+      const qty = CART[id];
+      const subtotal = p.harga*qty;
+      total += subtotal;
+      return '<div class="nota-item"><div>' +
+        '<div class="nm">'+p.nama+'</div>' +
+        '<div class="ctrl">' +
+          '<button onclick="ubahQtyNota(\''+id+'\',-1)">-</button>' +
+          '<span>'+qty+'</span>' +
+          '<button onclick="ubahQtyNota(\''+id+'\',1)">+</button>' +
+        '</div></div>' +
+        '<div>Rp'+fmt(subtotal)+'</div></div>';
+    }).join('');
+    document.getElementById('notaTotal').textContent = 'Rp' + fmt(total);
+  }
+  function ubahQtyNota(id, delta){ ubahQty(id, delta); renderNota(); renderGrid(); }
+
+  function openCart(){
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('drawer').classList.add('show');
+    document.getElementById('notaTanggal').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    document.getElementById('cartContent').classList.remove('hidden');
+    document.getElementById('successScreen').classList.add('hidden');
+    renderNota();
+  }
+  function closeCart(){
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('drawer').classList.remove('show');
+  }
+
+  function checkout(){
+    const nama = document.getElementById('fNama').value.trim();
+    const wa = document.getElementById('fWa').value.trim();
+    const alamat = document.getElementById('fAlamat').value.trim();
+    const catatan = document.getElementById('fCatatan').value.trim();
+    const metode = document.querySelector('input[name=metode]:checked').value;
+    const ids = Object.keys(CART);
+
+    if (!ids.length){ alert('Keranjang masih kosong.'); return; }
+    if (!nama){ alert('Nama pemesan wajib diisi.'); return; }
+    if (!wa || wa.length<9){ alert('Nomor WhatsApp tidak valid.'); return; }
+
+    const items = ids.map(id=>({id:id, qty:CART[id]}));
+    const btn = document.getElementById('btnCheckout');
+    btn.disabled = true; btn.textContent = 'Mengirim pesanan...';
+
+    // PENTING: Content-Type text/plain supaya tidak kena CORS preflight di GAS
+    fetch(WEBAPP_URL + '?action=submitOrder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ nama, wa, alamat, catatan, metode, items })
+    })
+      .then(r => r.json())
+      .then(res => {
+        btn.disabled = false; btn.textContent = '🛒 Pesan via WhatsApp';
+        if (res.success){
+          document.getElementById('cartContent').classList.add('hidden');
+          document.getElementById('successScreen').classList.remove('hidden');
+          document.getElementById('successOrderId').textContent = res.orderId;
+          CART = {}; updateCartCount(); renderGrid();
+          document.getElementById('fNama').value='';
+          document.getElementById('fWa').value='';
+          document.getElementById('fAlamat').value='';
+          document.getElementById('fCatatan').value='';
+        } else {
+          alert(res.message || 'Gagal mengirim pesanan.');
+        }
+      })
+      .catch(err => {
+        btn.disabled = false; btn.textContent = '🛒 Pesan via WhatsApp';
+        alert('Terjadi kesalahan: ' + err.message);
+      });
+  }
+
+  function fmt(n){ return Number(n||0).toLocaleString('id-ID'); }
+
+  function showStatus(){
+    document.getElementById('mainView').classList.add('hidden');
+    document.getElementById('statusView').classList.remove('hidden');
+  }
+  function showMain(){
+    document.getElementById('statusView').classList.add('hidden');
+    document.getElementById('mainView').classList.remove('hidden');
+  }
+  function cekStatus(){
+    const id = document.getElementById('statusOrderId').value.trim();
+    const box = document.getElementById('statusResult');
+    if (!id){ alert('Masukkan ID Order terlebih dahulu.'); return; }
+    box.classList.remove('hidden');
+    box.textContent = 'Mencari...';
+    fetch(WEBAPP_URL + '?action=cekStatus&orderId=' + encodeURIComponent(id))
+      .then(r => r.json())
+      .then(res => {
+        if (!res.found){ box.textContent = 'ID Order tidak ditemukan.'; return; }
+        box.textContent =
+          'ID Order : ' + res.orderId + '\n' +
+          'Nama     : ' + res.nama + '\n' +
+          'Status   : ' + res.status + '\n\n' +
+          'Detail:\n' + res.detail + '\n\n' +
+          'Total: Rp' + fmt(res.total);
+      })
+      .catch(err => { box.textContent = 'Gagal mengambil status: ' + err.message; });
+  }
+</script>
+</body>
+</html>
