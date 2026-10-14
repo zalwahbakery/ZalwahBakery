@@ -1054,9 +1054,15 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
      ============================================================ */
   function sesuaikanToolbar_() {
     var bar = document.querySelector('.topbar');
-    if (bar && bar.offsetHeight) {
-      document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight + 'px');
+    if (!bar) return;
+    // Ada kalang layout belum siap di event awal, jadi coba beberapa sumber
+    var h = bar.offsetHeight ||
+      (bar.getBoundingClientRect ? bar.getBoundingClientRect().height : 0);
+    if (h > 0) {
+      document.documentElement.style.setProperty('--topbar-h', h + 'px');
+      return true;
     }
+    return false;
   }
 
   function pasangEvent() {
@@ -1150,6 +1156,13 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
   function init() {
     sesuaikanToolbar_();
     window.addEventListener('resize', sesuaikanToolbar_);
+    window.addEventListener('load', function () { sesuaikanToolbar_(); });
+    // Cadangan kalau layout belum siap saat init
+    if (!sesuaikanToolbar_()) {
+      if (window.requestAnimationFrame) requestAnimationFrame(sesuaikanToolbar_);
+      setTimeout(sesuaikanToolbar_, 300);
+      setTimeout(sesuaikanToolbar_, 1200);
+    }
     var keranjang = bacaLocal(LS_KERANJANG);
     if (keranjang && typeof keranjang === 'object') {
       Object.keys(keranjang).forEach(function (k) {
