@@ -738,7 +738,7 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
     $('kosongPesan').classList.add('hidden');
     grid.innerHTML = list.map(function (p) {
       var diKeranjang = KERANJANG[p.id] || 0;
-      var sisa = (p.stok > 0 && p.stok <= 5) ? '<span class="sisa">Sisa ' + p.stok + '</span>' : '';
+      var sisa = p.stok > 0 ? '<span class="sisa">Sisa ' + p.stok + '</span>' : '';
       return '' +
         '<article class="card" data-id="' + esc(p.id) + '">' +
           '<div class="thumb">' +
