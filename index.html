@@ -456,11 +456,9 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
   /* ============================================================
      KONFIGURASI
      ============================================================ */
-  // URL Web App Apps Script.
-  // CATATAN: deployment v11 (backend baru) perlu di-redeploy oleh pemilik
-  // spreadsheet dari editor Apps Script supaya boleh diakses publik.
-  // Selama itu, frontend memakai deployment v6 yang masih publik.
-  var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw_sA3SKdqdr7jYJkjF3zSvFFbSkfNAuQb-MLS9EIPL9N22bfgzdW3KxH6WBCHImw2n/exec';
+  // URL Web App Apps Script (deployment backend baru, v11).
+  // Ganti kalau membuat deployment baru dari editor Apps Script.
+  var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyultieTbzMiQx0GxlsSdMIx8wGosuJvQzuwcwG2roRPzdQkwnStU5tnEPoUcTXv9Mf/exec';
 
   // Base asset (repo GitHub) — dipakai bila backend mengirim nama file relatif
   var ASSET_BASE = 'https://cdn.jsdelivr.net/gh/zalwahbakery/ZalwahBakery@main/assets/';
@@ -670,6 +668,12 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
     var logo = urlFoto(TOKO.logo_url || '');
     var img = $('logoImg');
     if (logo) {
+      // Kalau logo gagal dimuat (mis. salah nama file), tampilkan inisial toko
+      img.onerror = function () {
+        img.classList.add('hidden');
+        $('logoFb').classList.remove('hidden');
+        $('logoFb').textContent = nama.charAt(0).toUpperCase();
+      };
       img.src = logo;
       img.alt = 'Logo ' + nama;
       img.classList.remove('hidden');
