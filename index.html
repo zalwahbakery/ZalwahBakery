@@ -104,7 +104,7 @@ button{cursor:pointer}
 .badge b{color:var(--ink);font-weight:700}
 
 /* ---------- TOOLBAR (cari + kategori) ---------- */
-.toolbar{position:sticky;top:63px;z-index:20;padding:14px 0 10px;
+.toolbar{position:sticky;top:var(--topbar-h,63px);z-index:20;padding:14px 0 10px;
   background:linear-gradient(var(--bg) 82%,transparent)}
 .search{position:relative;margin-bottom:10px}
 .search input{
@@ -216,9 +216,12 @@ button{cursor:pointer}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
 
 /* ---------- OVERLAY + DRAWER ---------- */
+/* Penting: saat tidak aktif overlay harus transparan terhadap sentuhan,
+   jika tidak seluruh halaman jadi tidak bisa diklik. */
 .overlay{position:fixed;inset:0;background:rgba(46,27,18,.5);z-index:50;opacity:0;
-  transition:opacity .25s ease}
-.overlay.tampil{opacity:1}
+  visibility:hidden;pointer-events:none;
+  transition:opacity .25s ease,visibility .25s ease}
+.overlay.tampil{opacity:1;visibility:visible;pointer-events:auto}
 .drawer{
   position:fixed;top:0;right:0;height:100dvh;width:min(410px,94vw);z-index:51;
   background:var(--card);display:flex;flex-direction:column;
@@ -335,6 +338,12 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
 </head>
 <body>
 <header class="topbar">
+  <noscript>
+    <div style="padding:16px;text-align:center;font-size:14px;background:#FAF2E4;color:#2E1B12">
+      Halaman ini membutuhkan JavaScript aktif untuk memesan.<br>
+      Nyalakan JavaScript di pengaturan browser, atau hubungi kami langsung via WhatsApp.
+    </div>
+  </noscript>
   <div class="topbar-in">
     <div class="brand">
       <img class="brand-logo hidden" id="logoImg" alt="" width="42" height="42">
@@ -1043,6 +1052,13 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
   /* ============================================================
      EVENT
      ============================================================ */
+  function sesuaikanToolbar_() {
+    var bar = document.querySelector('.topbar');
+    if (bar && bar.offsetHeight) {
+      document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight + 'px');
+    }
+  }
+
   function pasangEvent() {
 
     // Klik terpusat (event delegation)
@@ -1132,6 +1148,8 @@ footer .credit{margin-top:18px;font-size:11.5px;opacity:.75}
      INISIALISASI
      ============================================================ */
   function init() {
+    sesuaikanToolbar_();
+    window.addEventListener('resize', sesuaikanToolbar_);
     var keranjang = bacaLocal(LS_KERANJANG);
     if (keranjang && typeof keranjang === 'object') {
       Object.keys(keranjang).forEach(function (k) {
