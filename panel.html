@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Pesanan — Wawa Bakery</title>
+<style>
+:root{
+  --bg:#FAF2E4;--card:#FFFDF8;--ink:#2E1B12;--soft:#6B5749;
+  --primary:#4A6B4D;--primary-dark:#374F3A;--primary-soft:#EAF1E8;
+  --gold:#C99A2E;--rose:#C97388;--line:#E4D5BE;--blue:#3B6FA0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Plus Jakarta Sans',system-ui,'Segoe UI',Roboto,sans-serif;font-size:13px}
+
+/* --- gerbang kunci --- */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gate[hidden],.app[hidden]{display:none}
+.gate-kotak{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:22px;max-width:400px;width:100%;box-shadow:0 6px 24px rgba(46,27,18,.08)}
+.gate-kotak h2{margin:0 0 6px;font-size:17px;font-family:Fraunces,Georgia,serif}
+.gate-kotak p{margin:8px 0;color:var(--soft);font-size:12px;line-height:1.6}
+.gate-baris{display:flex;gap:7px;margin-top:12px}
+.gate-baris input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;
+  background:var(--bg);font-size:13px;font-family:'Space Mono',monospace}
+.gate-baris input:focus{outline:none;border-color:var(--primary)}
+.gate-baris button{padding:9px 14px;border:0;border-radius:8px;background:var(--primary);
+  color:#fff;font-weight:700;font-size:12.5px;cursor:pointer}
+.gate-baris button:hover{background:var(--primary-dark)}
+.gate-galat{color:var(--rose);font-weight:600;min-height:17px}
+.gate-kecil{font-size:11px}
+.gate-tombol{border:1.5px solid var(--soft);background:transparent;color:var(--soft);
+  border-radius:999px;padding:5px 14px;font-weight:700;font-size:11px;cursor:pointer}
+.gate-tombol:hover{border-color:var(--primary);color:var(--primary-dark)}
+.gate-hasil{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink);min-height:15px}
+code{font-family:'Space Mono',monospace;background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:11px}
+
+/* --- panel utama --- */
+.app{max-width:880px;margin:0 auto;padding-bottom:26px}
+.head{padding:16px 18px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+.head h1{margin:0;font-size:17px;font-family:Fraunces,Georgia,serif}
+.head .sub{color:var(--soft);font-size:11.5px;margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 9px}
+.stat b{display:block;font-size:14px;font-family:'Space Mono',monospace;color:var(--primary-dark)}
+.stat span{font-size:10px;color:var(--soft)}
+.toolbar{display:flex;gap:7px;padding:12px 18px 6px;align-items:center}
+.toolbar input{flex:1;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;
+  background:var(--card);font-size:12.5px}
+.toolbar input:focus{outline:none;border-color:var(--primary)}
+.toolbar button{padding:7px 11px;border:1.5px solid var(--line);background:var(--card);
+  border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.toolbar button:hover{border-color:var(--primary);color:var(--primary-dark)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 18px 10px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:11px;font-family:'Space Mono',monospace;padding:5px 11px;
+  border:1.5px dashed var(--soft);border-radius:999px;background:transparent;color:var(--soft);
+  cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{border-style:solid;border-color:var(--primary);
+  background:var(--primary-soft);color:var(--primary-dark);font-weight:700}
+.list{padding:0 18px 16px;display:flex;flex-direction:column;gap:9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .oid{font-family:'Space Mono',monospace;font-weight:700;font-size:12px}
+.pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;
+  background:var(--primary);color:#fff}
+.pill.menunggu{background:var(--gold)}
+.pill.proses{background:var(--blue)}
+.pill.kirim{background:#7A5AA8}
+.pill.selesai{background:var(--primary)}
+.pill.batal{background:var(--rose)}
+.pill.bayar{background:#2E7D6B}
+.pill.siap{background:#2E7D6B}
+.pill.antar{background:#7A5AA8}
+.pill.tunggubayar{background:#8A6D1A}
+.row{color:var(--soft);font-size:11.5px;margin-top:3px}
+.row b{color:var(--ink);font-weight:700}
+.detail{margin-top:7px;padding:7px 9px;background:var(--bg);border-radius:8px;
+  font-family:'Space Mono',monospace;font-size:11px;white-space:pre-wrap;line-height:1.5}
+.actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.actions button{border:0;border-radius:7px;padding:6px 10px;font-size:11.5px;font-weight:700;
+  color:#fff;cursor:pointer;opacity:.92}
+.actions button:hover{opacity:1}
+.b-konfirmasi{background:var(--gold)}
+.b-bayar{background:#2E7D6B}
+.b-tunggubayar{background:#8A6D1A}
+.b-proses{background:var(--blue)}
+.b-siap{background:#2E7D6B}
+.b-kirim{background:#7A5AA8}
+.b-antar{background:#7A5AA8}
+.b-selesai{background:var(--primary)}
+.b-batal{background:var(--rose)}
+.kosong{text-align:center;color:var(--soft);padding:34px 10px;font-size:12.5px}
+.kosong.galat{color:var(--rose)}
+.kosong button{margin-top:10px;border:1.5px solid var(--rose);background:transparent;
+  color:var(--rose);border-radius:999px;padding:7px 18px;font-weight:700;font-size:12px;cursor:pointer}
+.kosong button:hover{background:var(--rose);color:#fff}
+.foot{padding:2px 18px 0;color:var(--soft);font-size:10.5px;line-height:1.7}
+.foot a{color:var(--blue);text-decoration:none;font-weight:700}
+.foot a:hover{text-decoration:underline}
+.keluar{padding:6px 18px 0}
+.keluar button{border:0;background:transparent;color:var(--soft);font-size:10.5px;
+  text-decoration:underline;cursor:pointer;padding:0}
+.keluar button:hover{color:var(--rose)}
+.toast{position:fixed;left:50%;bottom:14px;transform:translate(-50%,14px);background:var(--ink);
+  color:var(--bg);padding:9px 16px;border-radius:999px;font-size:12px;font-weight:600;
+  opacity:0;pointer-events:none;transition:.25s;z-index:10;max-width:88%;text-align:center}
+.toast.tampil{opacity:1;transform:translate(-50%,0)}
+.wa{font-family:'Space Mono',monospace;font-size:11px}
+
+@media (max-width:560px){
+  .head,.toolbar,.chips,.list,.foot,.keluar{padding-left:12px;padding-right:12px}
+  .stat b{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- Gerbang kunci: tampil pertama kali, kunci disimpan di sessionStorage -->
+<div id="gate" class="gate">
+  <div class="gate-kotak">
+    <h2>Panel Pesanan — Wawa Bakery</h2>
+    <p>Masukkan <b>kunci panel</b> untuk membuka data pesanan. Kunci sama dengan nilai
+    Script Properties <code>PANEL_KEY</code> di project Apps Script.</p>
+    <div class="gate-baris">
+      <input id="kunciInput" type="password" placeholder="Kunci panel" autocomplete="off" spellcheck="false">
+      <button id="kunciTombol" type="button">Buka panel</button>
+    </div>
+    <p id="gatePesan" class="gate-galat"></p>
+    <p class="gate-kecil">Lupa kunci? Minta pemilik toko — atau buka menu
+    <b>Wawa Bakery → Buka Panel Admin (browser)</b> di Google Sheet.</p>
+    <p class="gate-kecil">Panel mencurigakan?
+    <button id="cekKoneksiBtn" type="button" class="gate-tombol">Cek koneksi</button></p>
+    <p id="gateHasil" class="gate-hasil"></p>
+  </div>
+</div>
+
+<!-- Panel utama -->
+<div id="app" class="app" hidden>
+  <header class="head">
+    <h1>Panel Pesanan — Wawa Bakery</h1>
+    <div class="sub">Konfirmasi pesanan, pembayaran &amp; pengiriman. Pelanggan otomatis dapat notifikasi WhatsApp.</div>
+    <div class="stats">
+      <div class="stat"><b id="sHari">–</b><span>Order hari ini</span></div>
+      <div class="stat"><b id="sTunggu">–</b><span>Menunggu konfirmasi</span></div>
+      <div class="stat"><b id="sOmzet">–</b><span>Omzet hari ini</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input id="cari" type="search" placeholder="Cari ID order / nama / WA…">
+    <button id="btnRefresh" type="button">⟳ Muat ulang</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <div class="list" id="list"><div class="kosong">Memuat pesanan…</div></div>
+  <div class="foot" id="foot"></div>
+  <div class="keluar"><button id="gantiKunci" type="button">Ganti kunci / Keluar</button></div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ============================================================
+// Panel Admin versi web (v19-web, diperluas v27-pages).
+// Pengganti sidebar google.script.run yang sering tidak mendapat
+// balasan di browser. Semua komunikasi lewat fetch POST
+// text/plain (tanpa preflight), rute di Api.gs:
+//   ?action=panelData  body {f, q, k}
+//   ?action=panelAksi  body {id, a, k}
+//   ?action=panelPing  body {k}
+//
+// Halaman ini boleh disajikan dari DUA tempat:
+//   1. GitHub Pages (ZalwahBakery/panel.html) - jalur utama.
+//      Dari origin non-Google, request dikirim tanpa cookie sesi
+//      Google, jadi tidak kena halaman otorisasi yang muncul saat
+//      halaman disajikan dari script.google.com.
+//   2. Apps Script (?action=panel) - cadangan untuk browser yang
+//      tidak login Google. API diambil dari URL halaman itu sendiri.
+// ============================================================
+var API = '';
+var WEBAPP_API = 'https://script.google.com/macros/s/AKfycbyultieTbzMiQx0GxlsSdMIx8wGosuJvQzuwcwG2roRPzdQkwnStU5tnEPoUcTXv9Mf/exec';
+try {
+  if (location && location.origin &&
+      location.origin.indexOf('script.google.com') !== -1 &&
+      location.pathname) {
+    API = location.origin + location.pathname;
+  } else {
+    API = WEBAPP_API;
+  }
+} catch (err) {
+  API = WEBAPP_API;
+}
+
+var LABEL = {
+  Dikonfirmasi: {teks: 'Dikonfirmasi', cls: ''},
+  'Pembayaran Diterima': {teks: 'Pembayaran ✓', cls: 'bayar'},
+  'Menunggu Pembayaran': {teks: 'Menunggu Bayar', cls: 'tunggubayar'},
+  Diproses: {teks: 'Diproses', cls: 'proses'},
+  'Sudah Siap': {teks: 'Sudah Siap', cls: 'siap'},
+  Dikirim: {teks: 'Dikirim', cls: 'kirim'},
+  Diantar: {teks: 'Diantar', cls: 'antar'},
+  Selesai: {teks: 'Selesai', cls: 'selesai'},
+  Dibatalkan: {teks: 'Dibatalkan', cls: 'batal'},
+  'Menunggu Konfirmasi': {teks: 'Menunggu', cls: 'menunggu'}
+};
+
+var AKSI = [
+  {k: 'konfirmasi', label: 'Konfirmasi', cls: 'b-konfirmasi', ke: 'Dikonfirmasi'},
+  {k: 'tunggubayar', label: 'Menunggu bayar', cls: 'b-tunggubayar', ke: 'Menunggu Pembayaran'},
+  {k: 'bayar',      label: 'Pembayaran diterima', cls: 'b-bayar', ke: 'Pembayaran Diterima'},
+  {k: 'proses',     label: 'Proses',  cls: 'b-proses', ke: 'Diproses'},
+  {k: 'siap',       label: 'Sudah siap', cls: 'b-siap', ke: 'Sudah Siap'},
+  {k: 'antar',      label: 'Diantar', cls: 'b-antar', ke: 'Diantar'},
+  {k: 'selesai',    label: 'Selesai', cls: 'b-selesai', ke: 'Selesai'},
+  {k: 'batal',      label: 'Batal',   cls: 'b-batal',  ke: 'Dibatalkan'}
+];
+
+var FILTERS = [
+  {k: 'MENUNGGU', label: 'Menunggu'},
+  {k: 'Dikonfirmasi', label: 'Dikonfirmasi'},
+  {k: 'Menunggu Pembayaran', label: 'Menunggu Bayar'},
+  {k: 'Pembayaran Diterima', label: 'Dibayar'},
+  {k: 'Diproses', label: 'Diproses'},
+  {k: 'Sudah Siap', label: 'Sudah Siap'},
+  {k: 'Diantar', label: 'Diantar'},
+  {k: 'Selesai', label: 'Selesai'},
+  {k: 'Dibatalkan', label: 'Dibatalkan'},
+  {k: 'SEMUA', label: 'Semua'}
+];
+
+var KEY = null;
+var filter = 'MENUNGGU';
+var kueri = '';
+var panelSudahJalan = false;
+var sedangMuat = false;
+var timerOtomatis = null;
+var tToast = null;
+var tCari = null;
+
+// ---------------------------------------------------------------
+// Kunci (sessionStorage: hilang saat tab ditutup)
+// ---------------------------------------------------------------
+function ambilKey() {
+  try {
+    var k = window.sessionStorage.getItem('wawaPanelKey');
+    return k ? String(k) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function simpanKey(k) {
+  try { window.sessionStorage.setItem('wawaPanelKey', k); } catch (err) { /* mode privat: cukup di memori */ }
+  KEY = k;
+}
+
+function clearKey() {
+  try { window.sessionStorage.removeItem('wawaPanelKey'); } catch (err) { /* abaikan */ }
+  KEY = null;
+}
+
+// ---------------------------------------------------------------
+// Helper tampilan
+// ---------------------------------------------------------------
+function rupiah(n) { return 'Rp' + Number(n || 0).toLocaleString('id-ID'); }
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toast(pesan) {
+  var el = document.getElementById('toast');
+  el.textContent = pesan;
+  el.classList.add('tampil');
+  clearTimeout(tToast);
+  tToast = setTimeout(function () { el.classList.remove('tampil'); }, 2600);
+}
+
+function pesanGalat(e) {
+  if (!e) return 'alasan tidak diketahui';
+  if (typeof e === 'string') return e;
+  return e.message ? e.message : 'error tidak dikenal';
+}
+
+function tombolMuat(nama) {
+  var b = document.getElementById('btnRefresh');
+  if (b) b.textContent = nama;
+}
+
+function setMemuat() {
+  document.getElementById('list').innerHTML = '<div class="kosong">Memuat pesanan…</div>';
+  document.getElementById('sHari').textContent = '–';
+  document.getElementById('sTunggu').textContent = '–';
+  document.getElementById('sOmzet').textContent = '–';
+  document.getElementById('chips').innerHTML = '';
+  document.getElementById('foot').innerHTML = '';
+}
+
+function tampilGate(pesan) {
+  panelSudahJalan = false;
+  document.getElementById('app').hidden = true;
+  document.getElementById('gate').hidden = false;
+  document.getElementById('gatePesan').textContent = pesan || '';
+  document.getElementById('gateHasil').textContent = '';
+  var input = document.getElementById('kunciInput');
+  if (input) {
+    input.value = '';
+    if (input.focus) input.focus();
+  }
+}
+
+function tampilGalat(pesan) {
+  document.getElementById('list').innerHTML =
+    '<div class="kosong galat">' + esc(pesan) +
+    '<br><button type="button" data-coba="1">Coba lagi</button></div>';
+}
+
+// ---------------------------------------------------------------
+// Lapisan jaringan: POST text/plain (hindari preflight CORS),
+// dengan cadangan GET kalau server membalas HTML.
+//
+// Kenapa ada cadangan: browser yang login ke akun Google (terutama
+// multi-akun) kadang dibalas halaman HTML otorisasi Google saat POST,
+// padahal GET lolos saja. Kalau POST bukan JSON, permintaan diulang
+// lewat GET dengan parameter yang sama.
+//
+// Punya batas waktu 20 detik + pesan galat yang menjelaskan penyebabnya.
+// ---------------------------------------------------------------
+function kirim(action, obj, selesai) {
+  var sudahSelesai = false;
+  var batasWaktu = setTimeout(function () {
+    tutup(new Error('tidak ada respons dari server dalam 20 detik'), null);
+  }, 20000);
+
+  function tutup(err, data) {
+    if (sudahSelesai) return;
+    sudahSelesai = true;
+    clearTimeout(batasWaktu);
+    selesai(err, data);
+  }
+
+  function tangani(status, teks, cobaGet) {
+    var data;
+    try {
+      data = JSON.parse(teks);
+    } catch (errParse) {
+      if (cobaGet) { cobaGet(); return; }
+      var potong = String(teks).substring(0, 80).replace(/\s+/g, ' ');
+      tutup(new Error('server membalas bukan JSON (HTTP ' + status + '): ' + potong), null);
+      return;
+    }
+    tutup(null, data);
+  }
+
+  function kirimGet() {
+    try {
+      var kueri = Object.keys(obj).map(function (k) {
+        return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k] == null ? '' : obj[k]);
+      }).join('&');
+      fetch(API + '?action=' + action + '&' + kueri, { cache: 'no-store' })
+        .then(function (res) {
+          return res.text().then(function (teks) { tangani(res.status, teks, null); });
+        })
+        .catch(function (err) { tutup(err, null); });
+    } catch (err) {
+      tutup(err, null);
+    }
+  }
+
+  try {
+    fetch(API + '?action=' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(obj),
+      cache: 'no-store'
+    }).then(function (res) {
+      return res.text().then(function (teks) { tangani(res.status, teks, kirimGet); });
+    }).then(null, function (err) {
+      // Jaringan benar-benar mati -> jangan spam GET, laporkan langsung.
+      tutup(err, null);
+    });
+  } catch (err) {
+    tutup(err, null);
+  }
+}
+
+// ---------------------------------------------------------------
+// Muat data pesanan.
+// pertama=true  -> tampilkan status "Memuat pesanan…" (belum ada apa-apa)
+// pertama=false -> refresh latar belakang: daftar LAMA dibiarkan
+//                  tetap terlihat sampai data baru datang.
+// ---------------------------------------------------------------
+function muatData(pertama) {
+  if (!KEY) { tampilGate('Kunci panel belum dimasukkan.'); return; }
+  // Tampilkan panel + status memuat SEBELUM memanggil server. Kalau tidak,
+  // pesan "Memuat…"/galat dirender di dalam #app yang masih tersembunyi
+  // sehingga tombol terlihat "tidak merespon".
+  document.getElementById('gate').hidden = true;
+  document.getElementById('app').hidden = false;
+  if (pertama) setMemuat();
+  tombolMuat('Memuat…');
+  sedangMuat = true;
+
+  kirim('panelData', { f: filter, q: kueri, k: KEY }, function (err, data) {
+    sedangMuat = false;
+    tombolMuat('⟳ Muat ulang');
+
+    if (err) {
+      if (pertama) tampilGalat('Tidak bisa menghubungi server: ' + pesanGalat(err) + '.');
+      else toast('Gagal memperbarui data: ' + pesanGalat(err));
+      return;
+    }
+    if (!data || !data.ok) {
+      var psn = (data && (data.pesan || data.message)) || 'Gagal memuat data panel.';
+      if (data && data.kunciSalah) { clearKey(); tampilGate('Kunci panel tidak diterima. Periksa kembali.'); return; }
+      if (pertama) tampilGalat(psn);
+      else toast(psn);
+      return;
+    }
+    tampilkan(data);
+  });
+}
+
+// ---------------------------------------------------------------
+// Render data dari server
+// ---------------------------------------------------------------
+function tampilkan(data) {
+  document.getElementById('app').hidden = false;
+  document.getElementById('gate').hidden = true;
+  panelSudahJalan = true;
+
+  document.getElementById('sHari').textContent = data.statistik.hariIni;
+  document.getElementById('sTunggu').textContent = data.statistik.menunggu;
+  document.getElementById('sOmzet').textContent = rupiah(data.statistik.omzet);
+
+  var foot = 'Data dari sheet "Pesanan" · ' + data.statistik.semua + ' baris terhitung' +
+    (data.waktuServer ? ' · jam server ' + String(data.waktuServer).substring(0, 16).replace('T', ' ') + 'Z' : '') +
+    ' · panel v19-web';
+  if (data.urlDiagnostik) {
+    foot += '<br><a href="' + esc(data.urlDiagnostik) + '" target="_blank" rel="noopener">' +
+      'Cek kondisi sistem (diagnostik)</a>';
+  }
+  document.getElementById('foot').innerHTML = foot;
+
+  document.getElementById('chips').innerHTML = FILTERS.map(function (f) {
+    var n = 0;
+    if (f.k === 'SEMUA') n = data.statistik.semua;
+    else if (f.k === 'MENUNGGU') n = data.statistik.menunggu;
+    else n = (data.jumlahPerStatus[f.k] || 0);
+    return '<button class="chip" data-f="' + esc(f.k) + '" aria-pressed="' + (f.k === filter) + '">' +
+      esc(f.label) + ' (' + n + ')</button>';
+  }).join('');
+
+  var list = document.getElementById('list');
+  if (!data.pesanan.length) {
+    list.innerHTML = '<div class="kosong">Tidak ada pesanan pada filter ini.</div>';
+    return;
+  }
+
+  list.innerHTML = data.pesanan.map(function (p) {
+    var lab = LABEL[p.status] || {teks: p.status, cls: ''};
+    var tombol = AKSI.filter(function (a) { return a.ke !== p.status; })
+      .map(function (a) {
+        return '<button class="' + a.cls + '" data-aksi="' + a.k + '" data-id="' + esc(p.id) + '">' +
+          a.label + '</button>';
+      }).join('');
+    return '' +
+      '<div class="card" data-kartu="' + esc(p.id) + '">' +
+        '<div class="top"><span class="oid">' + esc(p.id) + '</span>' +
+        '<span class="pill ' + lab.cls + '">' + esc(lab.teks) + '</span></div>' +
+        '<div class="row"><b>' + esc(p.nama) + '</b> · <span class="wa">' + esc(p.wa) + '</span></div>' +
+        '<div class="row">' + esc(p.tanggal) + ' · ' + esc(p.metode) + '</div>' +
+        '<div class="row">Total <b>' + rupiah(p.total) + '</b>' +
+          (p.alamat && p.alamat !== '-' ? ' · ' + esc(p.alamat) : '') + '</div>' +
+        (p.catatan && p.catatan !== '-' ? '<div class="row">Catatan: ' + esc(p.catatan) + '</div>' : '') +
+        '<div class="detail">' + esc(p.detail) + '</div>' +
+        '<div class="actions">' + tombol + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// ---------------------------------------------------------------
+// Aksi ubah status (kirim ke server, lalu segarkan daftar)
+// ---------------------------------------------------------------
+function aksi(kode, orderId) {
+  if (sedangMuat) return;
+  var kartu = document.querySelector('[data-kartu="' + orderId + '"]');
+  if (kartu) kartu.style.opacity = '.45';
+
+  kirim('panelAksi', { id: orderId, a: kode, k: KEY }, function (err, data) {
+    if (err) {
+      toast('Gagal: ' + pesanGalat(err));
+      if (kartu) kartu.style.opacity = '1';
+      return;
+    }
+    if (data && data.ok) {
+      toast(data.message || 'Status diperbarui.');
+      muatData(false);
+      return;
+    }
+    toast((data && data.pesan) || 'Gagal memperbarui status.');
+    if (data && data.kunciSalah) { clearKey(); tampilGate('Kunci panel tidak diterima. Periksa kembali.'); return; }
+    if (kartu) kartu.style.opacity = '1';
+  });
+}
+
+// ---------------------------------------------------------------
+// Gerbang kunci
+// ---------------------------------------------------------------
+function masukkanKunci() {
+  var input = document.getElementById('kunciInput');
+  var v = input && input.value ? String(input.value).trim() : '';
+  if (!v) {
+    document.getElementById('gatePesan').textContent = 'Kunci belum diisi.';
+    return;
+  }
+  simpanKey(v);
+  document.getElementById('gatePesan').textContent = '';
+  document.getElementById('gateHasil').textContent = '';
+  muatData(true);
+}
+
+function gantiKunci() {
+  clearKey();
+  tampilGate('Kunci dihapus dari sesi ini. Masukkan kunci lagi untuk melanjutkan.');
+}
+
+function cekKoneksi() {
+  if (!KEY) { toast('Masukkan kunci dulu.'); return; }
+  var hasil = document.getElementById('gateHasil');
+  hasil.textContent = 'Menghubungi server…';
+  kirim('panelPing', { k: KEY }, function (err, data) {
+    if (err) {
+      hasil.textContent = 'Tidak bisa menghubungi server: ' + pesanGalat(err);
+      return;
+    }
+    if (data && data.ok) {
+      hasil.textContent = 'Server merespons (sheet: ' + (data.sheet || '?') + ')';
+      return;
+    }
+    hasil.textContent = 'Server menolak: ' + ((data && data.pesan) || 'kunci tidak cocok');
+  });
+}
+
+// ---------------------------------------------------------------
+// Sambungkan event & mulai
+// ---------------------------------------------------------------
+function init() {
+  KEY = ambilKey();
+
+  document.getElementById('kunciTombol').addEventListener('click', masukkanKunci);
+  document.getElementById('kunciInput').addEventListener('keydown', function (e) {
+    if (e && e.key === 'Enter') masukkanKunci();
+  });
+  document.getElementById('cekKoneksiBtn').addEventListener('click', cekKoneksi);
+  document.getElementById('gantiKunci').addEventListener('click', gantiKunci);
+
+  document.getElementById('btnRefresh').addEventListener('click', function () {
+    muatData(panelSudahJalan ? false : true);
+  });
+
+  document.getElementById('cari').addEventListener('input', function () {
+    var v = this.value;
+    clearTimeout(tCari);
+    tCari = setTimeout(function () {
+      kueri = v;
+      muatData(panelSudahJalan ? false : true);
+    }, 400);
+  });
+
+  document.getElementById('chips').addEventListener('click', function (e) {
+    var c = e.target && e.target.closest ? e.target.closest('[data-f]') : null;
+    if (!c) return;
+    filter = c.getAttribute('data-f');
+    muatData(panelSudahJalan ? false : true);
+  });
+
+  document.getElementById('list').addEventListener('click', function (e) {
+    var cob = e.target && e.target.closest ? e.target.closest('[data-coba]') : null;
+    if (cob) { muatData(true); return; }
+    var b = e.target && e.target.closest ? e.target.closest('[data-aksi]') : null;
+    if (!b) return;
+    aksi(b.getAttribute('data-aksi'), b.getAttribute('data-id'));
+  });
+
+  if (KEY) muatData(true);
+  else tampilGate(null);
+
+  // Refresh otomatis tiap 30 detik. Sengaja pakai muatData(false):
+  // daftar pesanan TIDAK dikosongkan saat menyegarkan (bug panel lama).
+  timerOtomatis = setInterval(function () {
+    if (KEY && panelSudahJalan) muatData(false);
+  }, 30000);
+}
+
+init();
+</script>
+</body>
+</html>
